@@ -11,6 +11,10 @@ import chess.engine
 
 
 def engine_path(override):
+    """
+    Return the path to a UCI engine executable, or raise ValueError if none is found.
+    If override is provided, it is used as the path to the engine. Otherwise, the function looks for Stockfish in the system PATH and common installation locations.
+    """
     if override:
         path = shutil.which(os.path.expanduser(override))
         if path:
@@ -27,6 +31,10 @@ def engine_path(override):
 
 
 def start_engine(args):
+    """
+    Start a UCI engine with the specified options and return the engine object.
+    If the engine cannot be started or configured, an exception is raised.
+    """
     engine = chess.engine.SimpleEngine.popen_uci(engine_path(args.engine))
     try:
         options = {}
@@ -51,6 +59,10 @@ def start_engine(args):
 
 
 def game_result(board):
+    """
+    Return a string describing the result of the game, or None if the game is not finished.
+    If the game is finished, the string includes the result (1-0, 0-1, or ½–½) and the reason (checkmate, stalemate, etc.).
+    """
     outcome = board.outcome()
     if outcome:
         reason = outcome.termination.name.replace("_", " ").lower()
@@ -59,7 +71,10 @@ def game_result(board):
 
 
 def can_claim(board, move=None):
-    """A claim may use the current position or a specific intended legal move."""
+    """
+    Return True if a draw can be claimed, False otherwise.
+    A claim may use the current position or a specific intended legal move.
+    """
     if move is None:
         return board.is_fifty_moves() or board.is_repetition(3)
     if move not in board.legal_moves:
@@ -72,6 +87,11 @@ def can_claim(board, move=None):
 
 
 def reply(engine, board, seconds, game):
+    """
+    Return a tuple (move, claim) where move is the engine's best move and claim is True if the engine claims a draw.
+    The engine is given the current board position and a time limit in seconds to think.
+    If the engine returns an illegal move, a ValueError is raised.
+    """
     result = engine.play(board, chess.engine.Limit(time=seconds),
                          info=chess.engine.INFO_SCORE, game=game)
     if result.move not in board.legal_moves:
@@ -83,6 +103,11 @@ def reply(engine, board, seconds, game):
 
 
 def play_terminal(engine, args):
+    """
+    Return a tuple (move, claim) where move is the engine's best move and claim is True if the engine claims a draw.
+    The engine is given the current board position and a time limit in seconds to think.
+    If the engine returns an illegal move, a ValueError is raised.
+    """
     board = chess.Board()
     human = args.side == "white"
     print(f"Playing {engine.id.get('name', 'UCI engine')}. Enter e4, Nf3, or e2e4. "
@@ -127,6 +152,10 @@ def play_terminal(engine, args):
 
 
 def main():
+    """
+    Main entry point for the ChessAI program. Parses command-line arguments, starts the UCI engine, and launches either a terminal or GUI interface for playing chess.
+    If the engine cannot be started or configured, an error message is printed and the program exits with a non-zero status
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cli", action="store_true", help="play in the terminal")
     parser.add_argument("--side", choices=("white", "black"), default="white")
